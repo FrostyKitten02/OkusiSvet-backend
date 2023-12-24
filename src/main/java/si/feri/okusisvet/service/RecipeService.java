@@ -9,6 +9,7 @@ import si.feri.okusisvet.dtomodel.recipe.IngredientGroupDto;
 import si.feri.okusisvet.dtomodel.recipe.RecipeIngredientDto;
 import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
+import si.feri.okusisvet.exceptions.IllegalResourceAccess;
 import si.feri.okusisvet.exceptions.ItemNotFoundException;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupListMapper;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupMapper;
@@ -35,10 +36,15 @@ public class RecipeService {
     private final IngredientGroupRepo ingredientGroupRepo;
     private final IngredientGroupListRepo ingredientGroupListRepo;
 
+    private static final String TEST_USER_ID = "TEST";
 
     //TODO use one querry!
     public DetailedRecipeDto getDetailedRecipe(UUID recipeId) {
         Recipe recipe = recipeRepo.findById(recipeId).orElseThrow(() -> new ItemNotFoundException("Recipe with id: " + recipeId + " not found!"));
+        if (!recipe.getOwnerId().equals(TEST_USER_ID) && !recipe.getState().isShowInPublicList()) {
+            throw new IllegalResourceAccess("Recipe with id: " + recipeId + " is not public!");
+        }
+
         List<IngredientGroup> ingredientGroups = ingredientGroupRepo.findIngredientGroupByRecipeId(recipeId);
         List<IngredientGroupDto> ingredientGroupDtos = ingredientGroups.stream().map(ig -> {
             IngredientGroupDto ingredientGroupDto = IngredientGroupMapper.INSTANCE.toDto(ig);
