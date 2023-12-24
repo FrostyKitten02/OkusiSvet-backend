@@ -10,7 +10,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class CreateRecipe {
+public class CreateRecipeDto {
     private String title;
     private List<RecipeIngredientGroup> ingredientGroups;
     private Boolean publish;
