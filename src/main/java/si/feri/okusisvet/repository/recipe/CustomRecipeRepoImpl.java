@@ -1,7 +1,6 @@
 package si.feri.okusisvet.repository.recipe;
 
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.dsl.EnumPath;
 import com.querydsl.jpa.impl.JPAQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,8 +9,6 @@ import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.model.QRecipe;
 import si.feri.okusisvet.model.Recipe;
 import si.feri.okusisvet.repository.QuerydslParent;
-
-import java.util.EnumSet;
 
 public class CustomRecipeRepoImpl extends QuerydslParent implements CustomRecipeRepo {
     public CustomRecipeRepoImpl() {
