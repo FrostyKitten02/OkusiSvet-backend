@@ -11,7 +11,7 @@ create table recipe
 );
 
 
-create table ingredient
+create table ingredient_type
 (
     id           UUID                     NOT NULL,
     version      INTEGER,
@@ -23,16 +23,16 @@ create table ingredient
 );
 
 
-create table ingredient_group_list
+create table ingredient
 (
-    id             UUID                     NOT NULL,
-    version        INTEGER,
-    created_at     TIMESTAMP with time zone NOT NULL,
-    updated_at     TIMESTAMP with time zone NOT NULL,
-    group_name     varchar(255),
-    group_position INTEGER                  NOT NULL,
-    amount         INTEGER                  NOT NULL,
-    ingredient_id  UUID                     NOT NULL,
+    id                  UUID                     NOT NULL,
+    version             INTEGER,
+    created_at          TIMESTAMP with time zone NOT NULL,
+    updated_at          TIMESTAMP with time zone NOT NULL,
+    amount              INTEGER                  NOT NULL,
+    unit                varchar(255)             NOT NULL,
+    ingredient_group_id UUID                     NOT NULL,
+    ingredient_type_id  UUID                     NOT NULL,
     PRIMARY KEY (id)
 );
 
@@ -50,6 +50,5 @@ create table ingredient_group
     PRIMARY KEY (id)
 );
 
-alter table ingredient_group_list
-    add constraint fk_ingredient_recipe_ingredient_id foreign key (ingredient_id) references ingredient (id);
-
+alter table ingredient add constraint fk_ingredient_recipe_ingredient_id foreign key (ingredient_type_id) references ingredient_type (id);
+alter table ingredient_group add constraint fk_ingredient_group_recipe_id foreign key (recipe_id) references recipe (id);

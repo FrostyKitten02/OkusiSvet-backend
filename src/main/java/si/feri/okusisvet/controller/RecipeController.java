@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import si.feri.okusisvet.dtomodel.recipe.CreateRecipeDto;
 import si.feri.okusisvet.dtomodel.recipe.DetailedRecipeDto;
+import si.feri.okusisvet.dtomodel.recipe.ListRecipesResponse;
 import si.feri.okusisvet.service.RecipeService;
 
 import java.util.UUID;
@@ -29,5 +30,10 @@ public class RecipeController {
     @GetMapping("/{id}")
     public DetailedRecipeDto getRecipe(@PathVariable("id") UUID recipeId) {
         return recipeService.getDetailedRecipe(recipeId);
+    }
+
+    @GetMapping
+    public ListRecipesResponse listRecipes() {
+        return null;
     }
 }

@@ -11,17 +11,17 @@ import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.exceptions.IllegalResourceAccess;
 import si.feri.okusisvet.exceptions.ItemNotFoundException;
-import si.feri.okusisvet.mappers.recipe.IngredientGroupListMapper;
+import si.feri.okusisvet.mappers.recipe.IngredientMapper;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupMapper;
 import si.feri.okusisvet.mappers.recipe.RecipeMapper;
 import si.feri.okusisvet.model.Ingredient;
 import si.feri.okusisvet.model.IngredientGroup;
-import si.feri.okusisvet.model.IngredientGroupList;
+import si.feri.okusisvet.model.IngredientType;
 import si.feri.okusisvet.model.Recipe;
 import si.feri.okusisvet.repository.IngredientGroupListRepo;
 import si.feri.okusisvet.repository.IngredientGroupRepo;
-import si.feri.okusisvet.repository.IngredientRepo;
-import si.feri.okusisvet.repository.RecipeRepo;
+import si.feri.okusisvet.repository.IngredientTypeRepo;
+import si.feri.okusisvet.repository.recipe.RecipeRepo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RecipeService {
     private final RecipeRepo recipeRepo;
-    private final IngredientRepo ingredientRepo;
+    private final IngredientTypeRepo ingredientTypeRepo;
     private final IngredientGroupRepo ingredientGroupRepo;
     private final IngredientGroupListRepo ingredientGroupListRepo;
 
@@ -48,8 +48,8 @@ public class RecipeService {
         List<IngredientGroup> ingredientGroups = ingredientGroupRepo.findIngredientGroupByRecipeId(recipeId);
         List<IngredientGroupDto> ingredientGroupDtos = ingredientGroups.stream().map(ig -> {
             IngredientGroupDto ingredientGroupDto = IngredientGroupMapper.INSTANCE.toDto(ig);
-            List<IngredientGroupList> ingredientGroupLists = ingredientGroupListRepo.findIngredientGroupListByIngredientGroupId(ig.getId());
-            List<RecipeIngredientDto> recipeIngredientDtos = ingredientGroupLists.stream().map(IngredientGroupListMapper.INSTANCE::toDto).toList();
+            List<Ingredient> ingredients = ingredientGroupListRepo.findIngredientGroupListByIngredientGroupId(ig.getId());
+            List<RecipeIngredientDto> recipeIngredientDtos = ingredients.stream().map(IngredientMapper.INSTANCE::toDto).toList();
             ingredientGroupDto.setIngredients(recipeIngredientDtos);
             return ingredientGroupDto;
         }).toList();
@@ -76,15 +76,15 @@ public class RecipeService {
         }
 
         Recipe savedRecipe = recipeRepo.save(recipe);
-        List<IngredientGroupList> ingredientGroupLists = validateCreateRecipeAndCreateIngredientGroups(newRecipe, savedRecipe.getId());
-        ingredientGroupListRepo.saveAll(ingredientGroupLists);
+        List<Ingredient> ingredients = validateCreateRecipeAndCreateIngredientGroups(newRecipe, savedRecipe.getId());
+        ingredientGroupListRepo.saveAll(ingredients);
         return savedRecipe.getId();
     }
 
 
-    private List<IngredientGroupList> validateCreateRecipeAndCreateIngredientGroups(CreateRecipeDto newRecipe, UUID recipeId) {
-        List<IngredientGroupList> ingredientGroupLists = new ArrayList<>();
-        HashMap<String, Ingredient> newlySaved = new HashMap<>();
+    private List<Ingredient> validateCreateRecipeAndCreateIngredientGroups(CreateRecipeDto newRecipe, UUID recipeId) {
+        List<Ingredient> ingredients = new ArrayList<>();
+        HashMap<String, IngredientType> newlySaved = new HashMap<>();
 
         newRecipe.getIngredientGroups().forEach(group -> {
             if (group.position() == null || group.position() <= 0) {
@@ -124,36 +124,36 @@ public class RecipeService {
                 }
 
 
-                final IngredientGroupList ingredientGroupList = new IngredientGroupList();
+                final Ingredient ingredientGroupList = new Ingredient();
                 ingredientGroupList.setIngredientGroup(ingredientGroup);
                 ingredientGroupList.setAmount(ingredient.amount());
                 ingredientGroupList.setUnit(ingredient.unit());
                 if (ingredient.id() != null) {
-                    Ingredient ingredientDb = ingredientRepo.findById(ingredient.id()).orElseThrow(() -> new ItemNotFoundException("Ingredient with id: " + ingredient.id() + " not found!"));
-                    ingredientGroupList.setIngredient(ingredientDb);
+                    IngredientType ingredientTypeDb = ingredientTypeRepo.findById(ingredient.id()).orElseThrow(() -> new ItemNotFoundException("Ingredient with id: " + ingredient.id() + " not found!"));
+                    ingredientGroupList.setIngredientType(ingredientTypeDb);
 
                 } else {
-                    Ingredient fromHashMap = newlySaved.get(ingredient.name());
+                    IngredientType fromHashMap = newlySaved.get(ingredient.name());
                     if (fromHashMap != null) {
-                        ingredientGroupList.setIngredient(fromHashMap);
+                        ingredientGroupList.setIngredientType(fromHashMap);
                     } else {
-                        Ingredient newIngredient = new Ingredient();
-                        newIngredient.setName(ingredient.name());
-                        newIngredient.setDefaultUnit(ingredient.unit());
+                        IngredientType newIngredientType = new IngredientType();
+                        newIngredientType.setName(ingredient.name());
+                        newIngredientType.setDefaultUnit(ingredient.unit());
 
-                        Ingredient saved = ingredientRepo.save(newIngredient);
-                        ingredientGroupList.setIngredient(saved);
+                        IngredientType saved = ingredientTypeRepo.save(newIngredientType);
+                        ingredientGroupList.setIngredientType(saved);
                         newlySaved.put(saved.getName(), saved);
                     }
                 }
 
-                ingredientGroupLists.add(ingredientGroupList);
+                ingredients.add(ingredientGroupList);
             });
 
 
         });
 
-        return ingredientGroupLists;
+        return ingredients;
     }
 
 }
