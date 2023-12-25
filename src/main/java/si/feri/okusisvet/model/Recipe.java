@@ -19,4 +19,6 @@ public class Recipe extends BaseModel {
     private String title;
     @Enumerated(EnumType.STRING)
     private RecipeState state;
+    //TODO: add recipe type: desert, main course, snack, and more
+    //TODO: add recipe difficulty: easy, medium, hard
 }

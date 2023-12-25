@@ -5,5 +5,5 @@ import si.feri.okusisvet.model.Recipe;
 
 import java.util.UUID;
 
-public interface RecipeRepo extends JpaRepository<Recipe, UUID> {
+public interface RecipeRepo extends JpaRepository<Recipe, UUID>, CustomRecipeRepo {
 }

@@ -1,12 +1,17 @@
 package si.feri.okusisvet.service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import si.feri.okusisvet.dtomodel.PageInfoRequest;
 import si.feri.okusisvet.dtomodel.recipe.CreateRecipeDto;
 import si.feri.okusisvet.dtomodel.recipe.DetailedRecipeDto;
 import si.feri.okusisvet.dtomodel.recipe.IngredientGroupDto;
 import si.feri.okusisvet.dtomodel.recipe.RecipeIngredientDto;
+import si.feri.okusisvet.dtomodel.recipe.RecipeSearchParams;
+import si.feri.okusisvet.dtomodel.recipe.RecipeSortInfoRequest;
 import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.exceptions.IllegalResourceAccess;
@@ -18,6 +23,9 @@ import si.feri.okusisvet.model.Ingredient;
 import si.feri.okusisvet.model.IngredientGroup;
 import si.feri.okusisvet.model.IngredientType;
 import si.feri.okusisvet.model.Recipe;
+import si.feri.okusisvet.paging.PageInfo;
+import si.feri.okusisvet.paging.RecipeSortInfo;
+import si.feri.okusisvet.paging.SortInfo;
 import si.feri.okusisvet.repository.IngredientGroupListRepo;
 import si.feri.okusisvet.repository.IngredientGroupRepo;
 import si.feri.okusisvet.repository.IngredientTypeRepo;
@@ -37,6 +45,25 @@ public class RecipeService {
     private final IngredientGroupListRepo ingredientGroupListRepo;
 
     private static final String TEST_USER_ID = "TEST";
+
+    public Page<Recipe> searchRecipes(@NotNull PageInfoRequest pageInfoRequest, RecipeSortInfoRequest sortInfoRequest, RecipeSearchParams searchParams) {
+
+        SortInfo<?> sort;
+        if (sortInfoRequest != null) {
+            sort = sortInfoRequest.toSortInfo();
+        } else {
+            sort = new RecipeSortInfo();
+        }
+
+        String searchStr;
+        if (searchParams == null) {
+            searchStr = null;
+        } else {
+            searchStr = searchParams.getSearchStr();
+        }
+
+        return recipeRepo.findAllPublicByCriteria(searchStr, PageInfo.toPageRequest(pageInfoRequest.toPageInfo(), sort));
+    }
 
     //TODO use one querry!
     public DetailedRecipeDto getDetailedRecipe(UUID recipeId) {
