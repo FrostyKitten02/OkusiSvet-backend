@@ -1,5 +1,6 @@
 package si.feri.okusisvet.security;
 
+import com.google.firebase.ErrorCode;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
@@ -40,9 +41,6 @@ public class SessionFilter extends OncePerRequestFilter {
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        //TODO check if session cookie is set and valid, if not delete session cookie and set correct response code
-        //deny all requests with session not set, except on certain endpoints!
-
         Optional<Cookie> sessionCookie = Arrays.stream(request.getCookies())
                 .filter(c->c.getName().equals(SecurityConstants.SESSION_COOKIE))
                 .findFirst();
@@ -53,7 +51,7 @@ public class SessionFilter extends OncePerRequestFilter {
             //even tho auth is not required we still check if user is logged in and set our context
             if (sessionCookie.isPresent()) {
                 try {
-                    checkSessionAndAddUserToContext(request, sessionCookie.get());
+                    checkSessionAndAddUserToContext(request, response, sessionCookie.get());
                 } catch (Exception e) {
                     log.warn("This error is expected, should not be of any concern!");
                     log.warn(e.getLocalizedMessage(), e);
@@ -71,18 +69,22 @@ public class SessionFilter extends OncePerRequestFilter {
         }
 
         if (sessionCookie.isPresent()) {
-            checkSessionAndAddUserToContext(request, sessionCookie.get());
+            checkSessionAndAddUserToContext(request, response, sessionCookie.get());
             filterChain.doFilter(request, response);
         } else {
             throw new UnauthorizedException("no authorization!");
         }
     }
 
-    private void checkSessionAndAddUserToContext(HttpServletRequest request, Cookie sessionCookie) {
+    private void checkSessionAndAddUserToContext(HttpServletRequest request, HttpServletResponse response, Cookie sessionCookie) {
         try {
             FirebaseToken token = firebaseAuth.verifySessionCookie(sessionCookie.getValue(), true);
             request.setAttribute(SecurityConstants.FIREBASE_TOKEN_ATTRIBUTE, token);
         } catch (FirebaseAuthException e) {
+            if (e.getErrorCode() == ErrorCode.CANCELLED || e.getErrorCode() == ErrorCode.NOT_FOUND) {
+                Cookie removeCookie = new Cookie(SecurityConstants.SESSION_COOKIE, null);
+                response.addCookie(removeCookie);
+            }
             throw new UnauthorizedException("Failed authentication with firebase", e);
         }
     }
