@@ -1,5 +1,6 @@
 package si.feri.okusisvet.exceptions;
 
+import com.google.firebase.auth.FirebaseAuthException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,5 +22,14 @@ public class CustomExceptionHandler {
     @ExceptionHandler(CustomRuntimeException.class)
     public ResponseEntity<ExceptionResponse> handleItemNotFound(CustomRuntimeException ex) {
         return ex.buildResponseEntity();
+    }
+
+
+    @ExceptionHandler(FirebaseAuthException.class)
+    public ResponseEntity<ExceptionResponse> handleFirebaseAuthException(FirebaseAuthException ex) {
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+        log.warn("Firebase auth exception: " + ex.getMessage());
+        log.error(ex.getLocalizedMessage(), ex);
+        return ResponseEntity.status(status).body(new ExceptionResponse(status, "Firebase auth exception"));
     }
 }
