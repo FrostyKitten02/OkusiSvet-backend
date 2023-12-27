@@ -39,13 +39,13 @@ public class RecipeController {
     private final RecipeService recipeService;
 
     @PostMapping
-    public UUID createRecipe(@RequestBody CreateRecipeDto recipe) {
-        return recipeService.addRecipe(recipe);
+    public UUID createRecipe(@RequestBody CreateRecipeDto recipe, HttpServletRequest request) {
+        return recipeService.addRecipe(recipe, request);
     }
 
     @GetMapping("/{id}")
-    public DetailedRecipeDto getRecipe(@PathVariable("id") UUID recipeId) {
-        return recipeService.getDetailedRecipe(recipeId);
+    public DetailedRecipeDto getRecipe(@PathVariable("id") UUID recipeId, HttpServletRequest request) {
+        return recipeService.getDetailedRecipe(recipeId, request);
     }
 
     @GetMapping("/list")

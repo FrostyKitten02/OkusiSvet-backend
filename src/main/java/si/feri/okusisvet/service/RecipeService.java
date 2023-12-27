@@ -1,6 +1,7 @@
 package si.feri.okusisvet.service;
 
 import com.google.api.client.util.Value;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +18,7 @@ import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.exceptions.IllegalResourceAccess;
 import si.feri.okusisvet.exceptions.ItemNotFoundException;
+import si.feri.okusisvet.exceptions.UnauthorizedException;
 import si.feri.okusisvet.mappers.recipe.IngredientMapper;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupMapper;
 import si.feri.okusisvet.mappers.recipe.RecipeMapper;
@@ -31,6 +33,7 @@ import si.feri.okusisvet.repository.IngredientGroupListRepo;
 import si.feri.okusisvet.repository.IngredientGroupRepo;
 import si.feri.okusisvet.repository.IngredientTypeRepo;
 import si.feri.okusisvet.repository.recipe.RecipeRepo;
+import si.feri.okusisvet.util.SessionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +47,6 @@ public class RecipeService {
     private final IngredientTypeRepo ingredientTypeRepo;
     private final IngredientGroupRepo ingredientGroupRepo;
     private final IngredientGroupListRepo ingredientGroupListRepo;
-
-    private static final String TEST_USER_ID = "TEST";
 
     public Page<Recipe> searchRecipes(@NotNull PageInfoRequest pageInfoRequest, RecipeSortInfoRequest sortInfoRequest, RecipeSearchParams searchParams) {
 
@@ -67,9 +68,10 @@ public class RecipeService {
     }
 
     //TODO use one querry!
-    public DetailedRecipeDto getDetailedRecipe(UUID recipeId) {
+    public DetailedRecipeDto getDetailedRecipe(UUID recipeId, HttpServletRequest request) {
         Recipe recipe = recipeRepo.findById(recipeId).orElseThrow(() -> new ItemNotFoundException("Recipe with id: " + recipeId + " not found!"));
-        if (!recipe.getOwnerId().equals(TEST_USER_ID) && !recipe.getState().isShowInPublicList()) {
+        String userId = SessionUtil.getUserId(request);
+        if (!recipe.getOwnerId().equals(userId) && !recipe.getState().isShowInPublicList()) {
             throw new IllegalResourceAccess("Recipe with id: " + recipeId + " is not public!");
         }
 
@@ -89,14 +91,18 @@ public class RecipeService {
 
 
     @Transactional
-    public UUID addRecipe(CreateRecipeDto newRecipe) {
+    public UUID addRecipe(CreateRecipeDto newRecipe, HttpServletRequest request) {
         if (newRecipe.getTitle() == null) {
             throw new BadRequestException("Missing recipe title!");
         }
 
         Recipe recipe = new Recipe();
         recipe.setTitle(newRecipe.getTitle());
-        recipe.setOwnerId("TEST");//TODO set to logged in user, after implementing firebase integration
+        String userId = SessionUtil.getUserId(request);
+        if (userId == null) {
+            throw new UnauthorizedException("User not logged in!");
+        }
+        recipe.setOwnerId(userId);
         if (newRecipe.getPublish() != null && newRecipe.getPublish()) {
             recipe.setState(RecipeState.PUBLIC_PUBLISHED);
         } else {
