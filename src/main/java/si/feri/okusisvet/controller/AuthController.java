@@ -1,12 +1,10 @@
 package si.feri.okusisvet.controller;
 
 
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.FirebaseToken;
 import com.google.firebase.auth.SessionCookieOptions;
-import jakarta.persistence.Version;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +26,7 @@ public class AuthController {
     private final FirebaseAuth firebaseAuth;
     @Value("${session.cookie.path}")
     private String sessionCookiePath;
-    public static record FirebaseTokenLogin(String idToken){}
+    public record FirebaseTokenLogin(String idToken){}
 
     @PostMapping("login")
     public void login(@RequestBody FirebaseTokenLogin request, HttpServletResponse response) throws FirebaseAuthException {
