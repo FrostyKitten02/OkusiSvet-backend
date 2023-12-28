@@ -28,6 +28,7 @@ public class AuthController {
     private String sessionCookiePath;
     public record FirebaseTokenLogin(String idToken){}
 
+    //todo move logic to service class
     @PostMapping("login")
     public void login(@RequestBody FirebaseTokenLogin request, HttpServletResponse response) throws FirebaseAuthException {
         String idToken = request.idToken();
@@ -43,11 +44,4 @@ public class AuthController {
         cookie.setPath(sessionCookiePath);
         response.addCookie(cookie);
     }
-
-
-    private void getUser(String sessionCookie) throws FirebaseAuthException {
-        FirebaseToken token = FirebaseAuth.getInstance().verifySessionCookie(sessionCookie, true);
-        String userId = token.getUid();
-    }
-
 }

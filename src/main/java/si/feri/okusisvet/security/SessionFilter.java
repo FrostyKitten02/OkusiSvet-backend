@@ -29,8 +29,17 @@ public class SessionFilter extends OncePerRequestFilter {
     private static final String ALLOW_ALL = "**";
 
     static {
-        noAuthPaths.add("recipes/list");
-        noAuthPaths.add("recipes/"+ALLOW_ALL);
+        noAuthPaths.add("/recipes/list");
+        noAuthPaths.add("/recipes/"+ALLOW_ALL);
+        noAuthPaths.add("/units/type/"+ALLOW_ALL);
+        noAuthPaths.add("/ingredient-types/"+ALLOW_ALL);
+
+        noAuthPaths.add("/swagger-ui/"+ALLOW_ALL);
+        noAuthPaths.add("/v3/api-docs");
+        noAuthPaths.add("/v3/api-docs.yaml");
+        noAuthPaths.add("/v3/api-docs/swagger-config");
+
+
         noAuthOnlyPaths.add("/auth/login");
     }
     private final FirebaseAuth firebaseAuth;
@@ -41,9 +50,14 @@ public class SessionFilter extends OncePerRequestFilter {
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        Optional<Cookie> sessionCookie = Arrays.stream(request.getCookies())
-                .filter(c->c.getName().equals(SecurityConstants.SESSION_COOKIE))
-                .findFirst();
+        Optional<Cookie> sessionCookie;
+        if (request.getCookies() == null || request.getCookies().length == 0) {
+            sessionCookie = Optional.empty();
+        } else {
+            sessionCookie = Arrays.stream(request.getCookies())
+                    .filter(c -> c.getName().equals(SecurityConstants.SESSION_COOKIE))
+                    .findFirst();
+        }
 
         String requestUrl = request.getServletPath();
         boolean noAuthPath = checkIfPathInArray(noAuthPaths, requestUrl);
@@ -96,13 +110,13 @@ public class SessionFilter extends OncePerRequestFilter {
         for (String path : paths) {
             String[] splitPathUrl = path.split("/");
 
-            if (splitReqUrl.length != splitPathUrl.length) {
+            if (!splitPathUrl[splitPathUrl.length-1].equals(ALLOW_ALL) && splitReqUrl.length != splitPathUrl.length) {
                 continue;
             }
 
             boolean samePath = false;
             for (int i = 0 ; i < splitPathUrl.length ; i++) {
-                if (splitReqUrl[i].equals("**")) {
+                if (splitPathUrl[i].equals(ALLOW_ALL)) {
                     //set to true??
                     samePath = true;
                 } else if (splitReqUrl[i].equals(splitPathUrl[i])) {
