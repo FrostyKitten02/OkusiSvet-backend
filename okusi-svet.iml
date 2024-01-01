@@ -5,4 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/target/generated-sources" isTestSource="false" generated="true" />
     </content>
   </component>
+  <component name="MavenCustomPomFilePath">
+    <option name="mavenPomFileUrl" value="file://$MODULE_DIR$/pom .xml" />
+  </component>
 </module>
