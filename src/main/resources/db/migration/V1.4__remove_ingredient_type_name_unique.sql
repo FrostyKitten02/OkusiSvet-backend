@@ -1,0 +1,1 @@
+alter table ingredient_type drop constraint ingredient_type_name_key;
