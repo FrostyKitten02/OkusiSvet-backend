@@ -1,11 +1,8 @@
 package si.feri.okusisvet.enums;
 
 import lombok.Getter;
-import si.feri.okusisvet.model.Recipe;
-import si.feri.okusisvet.paging.RecipeSortInfo;
 
 import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.List;
 
 public enum RecipeState {

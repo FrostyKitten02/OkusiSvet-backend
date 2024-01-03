@@ -4,10 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
-import java.security.Timestamp;
-import java.time.Instant;
-import java.util.Date;
-
 @Getter
 @Setter
 public class ExceptionResponse {

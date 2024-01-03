@@ -2,6 +2,7 @@ package si.feri.okusisvet.controller;
 
 import jakarta.annotation.Nullable;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -29,8 +30,10 @@ public class RecipeController {
     private final RecipeService recipeService;
 
     @PostMapping
-    public UUID createRecipe(@RequestBody CreateRecipeDto recipe, HttpServletRequest request) {
-        return recipeService.addRecipe(recipe, request);
+    public UUID createRecipe(@RequestBody CreateRecipeDto recipe, HttpServletRequest request, HttpServletResponse response) {
+        UUID id =  recipeService.addRecipe(recipe, request);
+        response.setStatus(HttpServletResponse.SC_CREATED);
+        return id;
     }
 
     @GetMapping("{id}")

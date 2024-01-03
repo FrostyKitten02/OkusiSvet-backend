@@ -3,15 +3,11 @@ package si.feri.okusisvet.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
 import si.feri.okusisvet.enums.RecipeDifficulty;
 import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.enums.RecipeType;
-
-import java.util.List;
 
 @Getter
 @Setter

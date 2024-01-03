@@ -3,7 +3,6 @@ package si.feri.okusisvet.dtomodel.recipe;
 import si.feri.okusisvet.dtomodel.SortInfoRequest;
 import si.feri.okusisvet.paging.RecipeSortInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class RecipeSortInfoRequest extends SortInfoRequest<RecipeSortInfo.Field> {
