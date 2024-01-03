@@ -1,6 +1,5 @@
 package si.feri.okusisvet.service;
 
-import com.google.api.client.util.Value;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
@@ -17,15 +16,17 @@ import si.feri.okusisvet.dtomodel.recipe.RecipeSortInfoRequest;
 import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.exceptions.IllegalResourceAccess;
+import si.feri.okusisvet.exceptions.InternalServerException;
 import si.feri.okusisvet.exceptions.ItemNotFoundException;
 import si.feri.okusisvet.exceptions.UnauthorizedException;
-import si.feri.okusisvet.mappers.recipe.IngredientMapper;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupMapper;
+import si.feri.okusisvet.mappers.recipe.IngredientMapper;
 import si.feri.okusisvet.mappers.recipe.RecipeMapper;
 import si.feri.okusisvet.model.Ingredient;
 import si.feri.okusisvet.model.IngredientGroup;
 import si.feri.okusisvet.model.IngredientType;
 import si.feri.okusisvet.model.Recipe;
+import si.feri.okusisvet.model.RecipeStep;
 import si.feri.okusisvet.paging.PageInfo;
 import si.feri.okusisvet.paging.RecipeSortInfo;
 import si.feri.okusisvet.paging.SortInfo;
@@ -33,17 +34,21 @@ import si.feri.okusisvet.repository.IngredientGroupListRepo;
 import si.feri.okusisvet.repository.IngredientGroupRepo;
 import si.feri.okusisvet.repository.IngredientTypeRepo;
 import si.feri.okusisvet.repository.recipe.RecipeRepo;
+import si.feri.okusisvet.repository.recipe.RecipeStepRepo;
 import si.feri.okusisvet.util.SessionUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TreeSet;
 import java.util.UUID;
+
 
 @Service
 @RequiredArgsConstructor
 public class RecipeService {
     private final RecipeRepo recipeRepo;
+    private final RecipeStepRepo recipeStepRepo;
     private final IngredientTypeRepo ingredientTypeRepo;
     private final IngredientGroupRepo ingredientGroupRepo;
     private final IngredientGroupListRepo ingredientGroupListRepo;
@@ -96,31 +101,39 @@ public class RecipeService {
             throw new BadRequestException("Missing recipe title!");
         }
 
-        Recipe recipe = new Recipe();
-        recipe.setTitle(newRecipe.getTitle());
         String userId = SessionUtil.getUserId(request);
         if (userId == null) {
             throw new UnauthorizedException("User not logged in!");
         }
+
+        Recipe recipe = new Recipe();
         recipe.setOwnerId(userId);
-        if (newRecipe.getPublish() != null && newRecipe.getPublish()) {
-            recipe.setState(RecipeState.PUBLIC_PUBLISHED);
-        } else {
-            recipe.setState(RecipeState.PRIVATE_DRAFT);
-        }
+        recipe.setTitle(newRecipe.getTitle());
+        recipe.setComment(newRecipe.getComment());
+        recipe.setState(RecipeState.PRIVATE_DRAFT);
 
         Recipe savedRecipe = recipeRepo.save(recipe);
-        List<Ingredient> ingredients = validateCreateRecipeAndCreateIngredientGroups(newRecipe, savedRecipe.getId());
+        List<Ingredient> ingredients = validateCreateRecipeAndCreateIngredientGroups(newRecipe.getIngredientGroups(), savedRecipe.getId());
+        List<RecipeStep> recipeSteps = validateAndCreateRecipeSteps(newRecipe.getSteps(), savedRecipe.getId());
         ingredientGroupListRepo.saveAll(ingredients);
+        recipeStepRepo.saveAll(recipeSteps);
         return savedRecipe.getId();
     }
 
 
-    private List<Ingredient> validateCreateRecipeAndCreateIngredientGroups(CreateRecipeDto newRecipe, UUID recipeId) {
+    private List<Ingredient> validateCreateRecipeAndCreateIngredientGroups(List<CreateRecipeDto.RecipeIngredientGroup> ingredientGroups, UUID recipeId) {
+        if (ingredientGroups == null) {
+            return new ArrayList<>();
+        }
+
+        if (recipeId == null) {
+            throw new InternalServerException();
+        }
+
         List<Ingredient> ingredients = new ArrayList<>();
         HashMap<String, IngredientType> newlySaved = new HashMap<>();
 
-        newRecipe.getIngredientGroups().forEach(group -> {
+        ingredientGroups.forEach(group -> {
             if (group.position() == null || group.position() <= 0) {
                 throw new BadRequestException("Missing ingredient group position!");
             }
@@ -158,36 +171,69 @@ public class RecipeService {
                 }
 
 
-                final Ingredient ingredientGroupList = new Ingredient();
-                ingredientGroupList.setIngredientGroup(ingredientGroup);
-                ingredientGroupList.setAmount(ingredient.amount());
-                ingredientGroupList.setUnit(ingredient.unit());
+                final Ingredient ingredientDb = new Ingredient();
+                ingredientDb.setIngredientGroup(ingredientGroup);
+                ingredientDb.setAmount(ingredient.amount());
+                ingredientDb.setUnit(ingredient.unit());
                 if (ingredient.id() != null) {
                     IngredientType ingredientTypeDb = ingredientTypeRepo.findById(ingredient.id()).orElseThrow(() -> new ItemNotFoundException("Ingredient with id: " + ingredient.id() + " not found!"));
-                    ingredientGroupList.setIngredientType(ingredientTypeDb);
+                    ingredientDb.setIngredientType(ingredientTypeDb);
 
                 } else {
                     IngredientType fromHashMap = newlySaved.get(ingredient.name());
                     if (fromHashMap != null) {
-                        ingredientGroupList.setIngredientType(fromHashMap);
+                        ingredientDb.setIngredientType(fromHashMap);
                     } else {
                         IngredientType newIngredientType = new IngredientType();
                         newIngredientType.setName(ingredient.name());
                         newIngredientType.setDefaultUnit(ingredient.unit());
 
                         IngredientType saved = ingredientTypeRepo.save(newIngredientType);
-                        ingredientGroupList.setIngredientType(saved);
+                        ingredientDb.setIngredientType(saved);
                         newlySaved.put(saved.getName(), saved);
                     }
                 }
 
-                ingredients.add(ingredientGroupList);
+                ingredients.add(ingredientDb);
             });
 
 
         });
 
         return ingredients;
+    }
+
+    private List<RecipeStep> validateAndCreateRecipeSteps(List<CreateRecipeDto.RecipeStep> recipeSteps, UUID recipeId) {
+        if (recipeSteps == null) {
+            return new ArrayList<>();
+        }
+
+        if (recipeId == null) {
+            throw new InternalServerException();
+        }
+
+        TreeSet<Integer> stepNumbers = new TreeSet<>();
+        return recipeSteps.stream().map(step -> {
+            if (step.stepNumber() == null || step.stepNumber() <= 0) {
+                throw new BadRequestException("Missing step number!");
+            }
+
+            if (stepNumbers.contains(step.stepNumber())) {
+                throw new BadRequestException("Duplicate step number!");
+            }
+
+            if (step.instructions() == null) {
+                throw new BadRequestException("Missing step instructions!");
+            }
+            stepNumbers.add(step.stepNumber());
+
+            RecipeStep recipeStep = new RecipeStep();
+            recipeStep.setStepNumber(step.stepNumber());
+            recipeStep.setTitle(step.title());
+            recipeStep.setInstructions(step.instructions());
+            recipeStep.setRecipeId(recipeId);
+            return recipeStep;
+        }).toList();
     }
 
 }

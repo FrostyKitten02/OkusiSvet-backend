@@ -17,6 +17,7 @@ import java.util.List;
 public class Recipe extends BaseModel {
     private String ownerId;
     private String title;
+    private String comment;
     @Enumerated(EnumType.STRING)
     private RecipeState state;
     //TODO: add recipe type: desert, main course, snack, and more
