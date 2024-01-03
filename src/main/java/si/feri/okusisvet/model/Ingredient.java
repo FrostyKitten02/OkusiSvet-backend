@@ -18,7 +18,7 @@ public class Ingredient extends BaseModel {
     @JoinColumn(name = "ingredient_group_id", nullable = false)
     private IngredientGroup ingredientGroup;
     @ManyToOne
-    @JoinColumn(name = "ingredient_id", nullable = false)
+    @JoinColumn(name = "ingredient_type_id", nullable = false)
     private IngredientType ingredientType;
     private Integer amount;
     @Enumerated(EnumType.STRING)

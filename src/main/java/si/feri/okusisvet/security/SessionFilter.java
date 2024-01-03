@@ -80,6 +80,9 @@ public class SessionFilter extends OncePerRequestFilter {
 
         if (noAuthOnlyPath && sessionCookie.isPresent()) {
             throw new NotAuthorizedException("Already logged in!");
+        } else if (noAuthOnlyPath) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
         if (sessionCookie.isPresent()) {
