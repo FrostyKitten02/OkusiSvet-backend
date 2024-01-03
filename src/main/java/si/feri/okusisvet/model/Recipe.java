@@ -7,7 +7,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
+import si.feri.okusisvet.enums.RecipeDifficulty;
 import si.feri.okusisvet.enums.RecipeState;
+import si.feri.okusisvet.enums.RecipeType;
 
 import java.util.List;
 
@@ -20,6 +22,8 @@ public class Recipe extends BaseModel {
     private String comment;
     @Enumerated(EnumType.STRING)
     private RecipeState state;
-    //TODO: add recipe type: desert, main course, snack, and more
-    //TODO: add recipe difficulty: easy, medium, hard
+    @Enumerated(EnumType.STRING)
+    private RecipeType type;
+    @Enumerated(EnumType.STRING)
+    private RecipeDifficulty difficulty;
 }

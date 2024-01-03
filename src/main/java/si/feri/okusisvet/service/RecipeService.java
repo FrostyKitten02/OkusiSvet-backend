@@ -112,6 +112,9 @@ public class RecipeService {
         recipe.setComment(newRecipe.getComment());
         recipe.setState(RecipeState.PRIVATE_DRAFT);
 
+        recipe.setType(newRecipe.getType());
+        recipe.setDifficulty(newRecipe.getDifficulty());
+
         Recipe savedRecipe = recipeRepo.save(recipe);
         List<Ingredient> ingredients = validateCreateRecipeAndCreateIngredientGroups(newRecipe.getIngredientGroups(), savedRecipe.getId());
         List<RecipeStep> recipeSteps = validateAndCreateRecipeSteps(newRecipe.getSteps(), savedRecipe.getId());
