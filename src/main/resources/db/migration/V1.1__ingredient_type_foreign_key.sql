@@ -1,0 +1,1 @@
+alter table ingredient add constraint fk_ingredient_ingredient_type foreign key (ingredient_type_id) references ingredient_type (id);
