@@ -3,7 +3,7 @@ package si.feri.okusisvet.util;
 import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotNull;
-import org.springframework.stereotype.Component;
+import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.security.SecurityConstants;
 
 
@@ -17,6 +17,15 @@ public class SessionUtil {
         }
 
         return firebaseToken.getUid();
+    }
+
+    public static String getUserIdStrict(@NotNull HttpServletRequest req) {
+        String userId = getUserId(req);
+        if (userId == null) {
+            throw new BadRequestException("User not logged in");
+        }
+
+        return userId;
     }
 
 }

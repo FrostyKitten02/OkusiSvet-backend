@@ -1,6 +1,5 @@
 package si.feri.okusisvet.dtomodel;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import si.feri.okusisvet.paging.SortInfo;

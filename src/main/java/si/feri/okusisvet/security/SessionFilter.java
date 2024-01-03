@@ -10,7 +10,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.actuate.endpoint.SecurityContext;
 import org.springframework.web.filter.OncePerRequestFilter;
 import si.feri.okusisvet.exceptions.NotAuthorizedException;
 import si.feri.okusisvet.exceptions.UnauthorizedException;
@@ -18,7 +17,6 @@ import si.feri.okusisvet.exceptions.UnauthorizedException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 

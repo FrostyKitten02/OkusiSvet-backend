@@ -3,13 +3,9 @@ package si.feri.okusisvet.paging;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
-import si.feri.okusisvet.dtomodel.SortInfoResponse;
-import si.feri.okusisvet.dtomodel.recipe.RecipeSortInfoRequest;
 import si.feri.okusisvet.model.Recipe;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
