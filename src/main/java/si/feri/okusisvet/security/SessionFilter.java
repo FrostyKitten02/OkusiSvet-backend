@@ -37,11 +37,11 @@ public class SessionFilter extends OncePerRequestFilter {
         noAuthPaths.add("/v3/api-docs.yaml");
         noAuthPaths.add("/v3/api-docs/swagger-config");
 
+        noAuthPaths.add("/auth/logout");
 
         noAuthOnlyPaths.add("/auth/login");
     }
     private final FirebaseAuth firebaseAuth;
-
     //TODO check if it works!
     public SessionFilter(FirebaseAuth firebaseAuth) {
         this.firebaseAuth = firebaseAuth;

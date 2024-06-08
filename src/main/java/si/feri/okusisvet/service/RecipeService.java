@@ -13,6 +13,7 @@ import si.feri.okusisvet.dtomodel.recipe.IngredientGroupDto;
 import si.feri.okusisvet.dtomodel.recipe.RecipeIngredientDto;
 import si.feri.okusisvet.dtomodel.recipe.RecipeSearchParams;
 import si.feri.okusisvet.dtomodel.recipe.RecipeSortInfoRequest;
+import si.feri.okusisvet.dtomodel.recipe.RecipeStepDto;
 import si.feri.okusisvet.enums.RecipeState;
 import si.feri.okusisvet.exceptions.BadRequestException;
 import si.feri.okusisvet.exceptions.IllegalResourceAccess;
@@ -22,6 +23,7 @@ import si.feri.okusisvet.exceptions.UnauthorizedException;
 import si.feri.okusisvet.mappers.recipe.IngredientGroupMapper;
 import si.feri.okusisvet.mappers.recipe.IngredientMapper;
 import si.feri.okusisvet.mappers.recipe.RecipeMapper;
+import si.feri.okusisvet.mappers.recipe.RecipeStepMapper;
 import si.feri.okusisvet.model.Ingredient;
 import si.feri.okusisvet.model.IngredientGroup;
 import si.feri.okusisvet.model.IngredientType;
@@ -89,8 +91,12 @@ public class RecipeService {
             return ingredientGroupDto;
         }).toList();
 
+        List<RecipeStepDto> steps = recipeStepRepo.findAllByRecipeId(recipeId).stream().map(RecipeStepMapper.INSTANCE::toDto).toList();
+
         DetailedRecipeDto detailedRecipeDto = RecipeMapper.INSTANCE.toDetailedDto(recipe);
         detailedRecipeDto.setIngredientGroups(ingredientGroupDtos);
+        detailedRecipeDto.setRecipeSteps(steps);
+
         return detailedRecipeDto;
     }
 
@@ -237,6 +243,16 @@ public class RecipeService {
             recipeStep.setRecipeId(recipeId);
             return recipeStep;
         }).toList();
+    }
+
+    public void publishRecipe(UUID recipeId, HttpServletRequest request) {
+        Recipe recipe = recipeRepo.findById(recipeId).orElseThrow(() -> new ItemNotFoundException("Recipe with id: " + recipeId + " not found!"));
+        String userId = SessionUtil.getUserId(request);
+        if (!recipe.getOwnerId().equals(userId)) {
+            throw new IllegalResourceAccess("Recipe with id: " + recipeId + " is not owned by user!");
+        }
+        recipe.setState(RecipeState.PUBLIC_PUBLISHED);
+        recipeRepo.save(recipe);
     }
 
 }

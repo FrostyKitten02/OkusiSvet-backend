@@ -1,0 +1,1 @@
+alter table recipe alter column owner_id TYPE TEXT;

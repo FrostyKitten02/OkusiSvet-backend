@@ -13,4 +13,5 @@ public class DetailedRecipeDto {
     private String title;
     private RecipeState state;
     private List<IngredientGroupDto> ingredientGroups;
+    private List<RecipeStepDto> recipeSteps;
 }

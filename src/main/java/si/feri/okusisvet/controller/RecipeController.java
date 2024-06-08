@@ -36,6 +36,11 @@ public class RecipeController {
         return id;
     }
 
+    @GetMapping("{id}/publish")
+    public void publishRecipe(@PathVariable("id") UUID recipeId, HttpServletRequest request) {
+        recipeService.publishRecipe(recipeId, request);
+    }
+
     @GetMapping("{id}")
     public DetailedRecipeDto getRecipe(@PathVariable("id") UUID recipeId, HttpServletRequest request) {
         return recipeService.getDetailedRecipe(recipeId, request);
