@@ -49,10 +49,11 @@ public class RecipeController {
     @GetMapping("list")
     public ListRecipeResponse listRecipes(@NotNull PageInfoRequest pageInfo,
                                           @Nullable RecipeSortInfoRequest sortInfo,
-                                          @Nullable RecipeSearchParams searchParams
+                                          @Nullable RecipeSearchParams searchParams,
+                                          HttpServletRequest request
     ) {
         return ListRecipeResponse.fromPage(
-                recipeService.searchRecipes(pageInfo, sortInfo, searchParams)
+                recipeService.searchRecipes(pageInfo, sortInfo, searchParams, request)
         );
     }
 }

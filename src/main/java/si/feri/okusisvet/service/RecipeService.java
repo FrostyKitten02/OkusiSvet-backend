@@ -55,7 +55,7 @@ public class RecipeService {
     private final IngredientGroupRepo ingredientGroupRepo;
     private final IngredientGroupListRepo ingredientGroupListRepo;
 
-    public Page<Recipe> searchRecipes(@NotNull PageInfoRequest pageInfoRequest, RecipeSortInfoRequest sortInfoRequest, RecipeSearchParams searchParams) {
+    public Page<Recipe> searchRecipes(@NotNull PageInfoRequest pageInfoRequest, RecipeSortInfoRequest sortInfoRequest, RecipeSearchParams searchParams, HttpServletRequest request) {
 
         SortInfo<?> sort;
         if (sortInfoRequest != null) {
@@ -65,13 +65,20 @@ public class RecipeService {
         }
 
         String searchStr;
+        String searchByUserId;
         if (searchParams == null) {
             searchStr = null;
+            searchByUserId = null;
         } else {
             searchStr = searchParams.getSearchStr();
+            if (searchParams.getOnlyUserRecipes() != null && searchParams.getOnlyUserRecipes()) {
+                searchByUserId = SessionUtil.getUserId(request);
+            } else {
+                searchByUserId = null;
+            }
         }
 
-        return recipeRepo.findAllPublicByCriteria(searchStr, PageInfo.toPageRequest(pageInfoRequest.toPageInfo(), sort));
+        return recipeRepo.findAllPublicByCriteria(searchStr, searchByUserId, PageInfo.toPageRequest(pageInfoRequest.toPageInfo(), sort));
     }
 
     //TODO use one querry!

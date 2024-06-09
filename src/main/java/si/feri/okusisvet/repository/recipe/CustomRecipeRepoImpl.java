@@ -16,7 +16,7 @@ public class CustomRecipeRepoImpl extends QuerydslParent implements CustomRecipe
     }
 
     @Override
-    public Page<Recipe> findAllPublicByCriteria(String searchStr, Pageable pageable) {
+    public Page<Recipe> findAllPublicByCriteria(String searchStr, String userId, Pageable pageable) {
         QRecipe qRecipe = QRecipe.recipe;
         BooleanBuilder restrictions = new BooleanBuilder();
 
@@ -34,6 +34,10 @@ public class CustomRecipeRepoImpl extends QuerydslParent implements CustomRecipe
             stateEnumRestrictions.or(qRecipe.state.eq(state));
         }
         restrictions.and(stateEnumRestrictions);
+
+        if (userId != null) {
+            restrictions.and(qRecipe.ownerId.eq(userId));
+        }
 
 
         Querydsl querydsl = getQuerydsl();

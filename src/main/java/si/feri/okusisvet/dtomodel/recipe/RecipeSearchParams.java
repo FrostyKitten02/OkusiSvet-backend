@@ -7,4 +7,5 @@ import lombok.Setter;
 @Setter
 public class RecipeSearchParams {
     private String searchStr;
+    private Boolean onlyUserRecipes;
 }
