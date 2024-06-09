@@ -116,7 +116,8 @@ public class RecipeService {
         recipe.setOwnerId(userId);
         recipe.setTitle(newRecipe.getTitle());
         recipe.setComment(newRecipe.getComment());
-        recipe.setState(RecipeState.PRIVATE_DRAFT);
+        //this is temporary!!
+        recipe.setState(RecipeState.PUBLIC_PUBLISHED);
 
         recipe.setType(newRecipe.getType());
         recipe.setDifficulty(newRecipe.getDifficulty());
@@ -175,9 +176,9 @@ public class RecipeService {
                 }
 
                 //maybe allow this and use id??
-                if (ingredient.id() != null && ingredient.name() != null) {
-                    throw new BadRequestException("Ingredient can have only id or name!");
-                }
+//                if (ingredient.id() != null && ingredient.name() != null) {
+//                    throw new BadRequestException("Ingredient can have only id or name!");
+//                }
 
 
                 final Ingredient ingredientDb = new Ingredient();
