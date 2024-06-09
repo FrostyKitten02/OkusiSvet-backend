@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import si.feri.okusisvet.security.SecurityConstants;
+import si.feri.okusisvet.util.SessionUtil;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -54,5 +55,10 @@ public class AuthController {
         cookie.setMaxAge(0);
         cookie.setPath(sessionCookiePath);
         response.addCookie(cookie);
+    }
+
+    @GetMapping("check")
+    public String currentUser(HttpServletRequest request) {
+        return SessionUtil.getUserId(request);
     }
 }

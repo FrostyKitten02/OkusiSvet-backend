@@ -81,6 +81,69 @@ public class RecipeService {
         return recipeRepo.findAllPublicByCriteria(searchStr, searchByUserId, PageInfo.toPageRequest(pageInfoRequest.toPageInfo(), sort));
     }
 
+    @Transactional
+    public void editRecipe(DetailedRecipeDto dto, HttpServletRequest request) {
+        Recipe recipe = recipeRepo.findById(dto.getId()).orElseThrow(() -> new ItemNotFoundException("Recipe with id: " + dto.getId() + " not found!"));
+        String userId = SessionUtil.getUserId(request);
+        if (!recipe.getOwnerId().equals(userId)) {
+            throw new IllegalResourceAccess("Recipe with id: " + dto.getId() + " is not public!");
+        }
+
+        recipeStepRepo.deleteAll(recipeStepRepo.findAllByRecipeId(recipe.getId()));
+
+        List<IngredientGroup> groups = ingredientGroupRepo.findIngredientGroupByRecipeId(recipe.getId());
+
+        for (IngredientGroup g : groups) {
+            ingredientGroupListRepo.deleteAll(ingredientGroupListRepo.findIngredientGroupListByIngredientGroupId(g.getId()));
+            ingredientGroupRepo.delete(g);
+        }
+
+        recipe.setTitle(dto.getTitle());
+        recipe.setType(dto.getType());
+        recipe.setDifficulty(dto.getDifficulty());
+        //TODO use from request
+        recipe.setState(RecipeState.PUBLIC_PUBLISHED);
+        recipe = recipeRepo.save(recipe);
+
+        int stepNum = 1;
+        for (RecipeStepDto step : dto.getRecipeSteps()) {
+            RecipeStep recipeStep = new RecipeStep();
+            recipeStep.setInstructions(step.getInstructions());
+            recipeStep.setTitle(step.getTitle());
+            recipeStep.setStepNumber(stepNum++);
+            recipeStep.setRecipeId(recipe.getId());
+            recipeStepRepo.save(recipeStep);
+        }
+
+        for (IngredientGroupDto gDto : dto.getIngredientGroups()) {
+            IngredientGroup gentity = new IngredientGroup();
+            gentity.setName(gDto.getName());
+            gentity.setPosition(gDto.getPosition());
+            gentity.setRecipeId(recipe.getId());
+
+            IngredientGroup savedGroup = ingredientGroupRepo.save(gentity);
+
+            List<Ingredient> ingredients = gDto.getIngredients().stream().map(i -> {
+                Ingredient ingredient = new Ingredient();
+                ingredient.setAmount(i.getAmount());
+                ingredient.setUnit(i.getUnit());
+                ingredient.setIngredientGroup(savedGroup);
+                IngredientType type = ingredientTypeRepo.findFirstByName(i.getName());
+                if (type == null) {
+                    type = new IngredientType();
+                    type.setName(i.getName());
+                    type.setDefaultUnit(i.getUnit());
+                    type = ingredientTypeRepo.save(type);
+                }
+                ingredient.setIngredientType(type);
+                return ingredient;
+            }).toList();
+
+            ingredientGroupListRepo.saveAll(ingredients);
+        }
+    }
+
+
     //TODO use one querry!
     public DetailedRecipeDto getDetailedRecipe(UUID recipeId, HttpServletRequest request) {
         Recipe recipe = recipeRepo.findById(recipeId).orElseThrow(() -> new ItemNotFoundException("Recipe with id: " + recipeId + " not found!"));

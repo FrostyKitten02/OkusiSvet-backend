@@ -38,6 +38,7 @@ public class SessionFilter extends OncePerRequestFilter {
         noAuthPaths.add("/v3/api-docs/swagger-config");
 
         noAuthPaths.add("/auth/logout");
+        noAuthPaths.add("/auth/check");
 
         noAuthOnlyPaths.add("/auth/login");
     }
@@ -77,7 +78,7 @@ public class SessionFilter extends OncePerRequestFilter {
         boolean noAuthOnlyPath = checkIfPathInArray(noAuthOnlyPaths, requestUrl);
 
         if (noAuthOnlyPath && sessionCookie.isPresent()) {
-            throw new NotAuthorizedException("Already logged in!");
+            return;
         } else if (noAuthOnlyPath) {
             filterChain.doFilter(request, response);
             return;
