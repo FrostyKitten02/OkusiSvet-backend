@@ -10,4 +10,5 @@ import java.util.UUID;
 @Repository
 public interface RecipeListContentRepo extends JpaRepository<RecipeListContent, UUID> {
     List<RecipeListContent> findAllByRecipeListId(UUID recipeListId);
+    RecipeListContent findFirstByRecipeIdAndRecipeListId(UUID recipeId, UUID recipeListId);
 }

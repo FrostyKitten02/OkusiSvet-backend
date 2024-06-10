@@ -18,6 +18,7 @@ import si.feri.okusisvet.repository.recipe.RecipeRepo;
 import si.feri.okusisvet.util.SessionUtil;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,6 +35,22 @@ public class MyListService {
         recipeList.setTitle(title);
         recipeList.setOwnerId(userId);
         return recipeListRepo.save(recipeList).getId();
+    }
+
+    public void updateList(String title, UUID id, HttpServletRequest req) {
+        String userId = SessionUtil.getUserIdStrict(req);
+
+        Optional<RecipeList> list = recipeListRepo.findById(id);
+        if (list.isEmpty()) {
+            throw new ItemNotFoundException("List not found by id");
+        }
+
+        if (!list.get().getOwnerId().equals(userId)) {
+            throw new ItemNotFoundException("List not found by id");
+        }
+
+        list.get().setTitle(title);
+        recipeListRepo.save(list.get());
     }
 
     public List<MyListDto> getUsersLists(HttpServletRequest req) {
@@ -58,6 +75,22 @@ public class MyListService {
         recipeListContent.setRecipeId(recipeId);
         recipeListContent.setRecipeListId(listId);
         recipeListContentRepo.save(recipeListContent);
+    }
+
+    public void removeRecipeFromList(UUID recipeId, UUID listId, HttpServletRequest req) {
+        String userId = SessionUtil.getUserIdStrict(req);
+
+        RecipeList recipeList = recipeListRepo.findById(listId).orElseThrow(()->new ItemNotFoundException("List not found by id"));
+        if (!recipeList.getOwnerId().equals(userId)) {
+            throw new IllegalResourceAccess("Bad request");
+        }
+
+        RecipeListContent listContent = recipeListContentRepo.findFirstByRecipeIdAndRecipeListId(recipeId, listId);
+        if (listContent == null) {
+            return;
+        }
+
+        recipeListContentRepo.delete(listContent);
     }
 
     public List<RecipeDto> getMyListRecipes(UUID listId, HttpServletRequest req) {

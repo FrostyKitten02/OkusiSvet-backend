@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,12 +24,21 @@ import java.util.UUID;
 @RequestMapping("my-list")
 public class MyListController {
     private final MyListService myListService;
+
+    public static record ListRequest(
+            String title
+    ) { }
+
     @Operation(description = "Create new list for recipes for user that made this request")
     @PostMapping
-    public UUID createNewList(@RequestBody String title, HttpServletRequest request, HttpServletResponse response) {
-        UUID id = myListService.createNewList(title, request);
+    public UUID createNewList(@RequestBody ListRequest req, HttpServletRequest request, HttpServletResponse response) {
+        UUID id = myListService.createNewList(req.title, request);
         response.setStatus(HttpServletResponse.SC_CREATED);
         return id;
+    }
+    @PatchMapping("/{id}")
+    public void updateList(@RequestBody ListRequest req, @PathVariable UUID id, HttpServletRequest request) {
+        myListService.updateList(req.title, id, request);
     }
 
     @Operation(description = "Get all lists for user that made this request")
@@ -49,7 +59,20 @@ public class MyListController {
         response.setStatus(HttpServletResponse.SC_CREATED);
     }
 
-    @Operation(description = "Get recipes (only basic info) from users recipe list, user can only get recipes from his list")
+
+    @PatchMapping("{listId}/recipe/{recipeId}/remove")
+    public void removeRecipeFromList(
+            @PathVariable("listId") UUID listId,
+            @PathVariable("recipeId") UUID recipeId,
+            HttpServletRequest request,
+            HttpServletResponse response
+    ) {
+        myListService.removeRecipeFromList(recipeId, listId, request);
+        response.setStatus(HttpServletResponse.SC_CREATED);
+    }
+
+
+        @Operation(description = "Get recipes (only basic info) from users recipe list, user can only get recipes from his list")
     @GetMapping("{listId}/recipes")
     public List<RecipeDto> getMyListRecipes(@PathVariable("listId") UUID listId, HttpServletRequest request) {
         return myListService.getMyListRecipes(listId, request);
